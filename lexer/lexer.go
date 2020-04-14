@@ -33,6 +33,15 @@ func (l *Lexer) readChar() {
 	l.readPos++
 }
 
+// peekChar is different from readChar in that it returns instead of updates l.ch
+// And also peekChar doesn't advance pointers
+func (l *Lexer) peekChar() byte {
+	if l.readPos >= len(l.input) {
+		return 0
+	}
+	return l.input[l.readPos]
+}
+
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
 		l.readChar()
@@ -71,7 +80,13 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		tok = newTokenByte(token.ASSIGN, l.ch)
+		if l.peekChar() == '=' {
+			firstCh := l.ch
+			l.readChar()
+			tok = newTokenString(token.EQ, string(firstCh)+string(l.ch))
+		} else {
+			tok = newTokenByte(token.ASSIGN, l.ch)
+		}
 	case ';':
 		tok = newTokenByte(token.SEMICOLON, l.ch)
 	case '(':
@@ -82,6 +97,24 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newTokenByte(token.COMMA, l.ch)
 	case '+':
 		tok = newTokenByte(token.PLUS, l.ch)
+	case '-':
+		tok = newTokenByte(token.MINUS, l.ch)
+	case '!':
+		if l.peekChar() == '=' {
+			firstCh := l.ch
+			l.readChar()
+			tok = newTokenString(token.NEQ, string(firstCh)+string(l.ch))
+		} else {
+			tok = newTokenByte(token.BANG, l.ch)
+		}
+	case '/':
+		tok = newTokenByte(token.SLASH, l.ch)
+	case '*':
+		tok = newTokenByte(token.STAR, l.ch)
+	case '<':
+		tok = newTokenByte(token.LT, l.ch)
+	case '>':
+		tok = newTokenByte(token.GT, l.ch)
 	case '{':
 		tok = newTokenByte(token.LBRACE, l.ch)
 	case '}':
